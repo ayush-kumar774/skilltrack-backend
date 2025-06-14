@@ -1,0 +1,85 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/skilltrack
+    username: postgres
+    password: toor
+    driver-class-name: org.postgresql.Driver
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: dummy@gmail.com
+    password: dummy
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  jackson:
+    time-zone: Asia/Kolkata
+    date-format: dd MMM yyyy hh:mm a z
+    serialization:
+      write-dates-as-timestamps: false
+
+  jpa:
+    hibernate:
+      ddl-auto: update    # use "validate" in prod
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      # password: your_redis_password (optional)
+
+
+
+# === Swagger Config ===
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
+# === CORS (handled in CorsConfig.java, but port setup for frontend) ===
+cors:
+  allowed-origins: http://localhost:3000
+
+# === JWT Config ===
+jwt:
+  secret: my-super-secret-key-should-be-long-and-safe
+  expiration: 3600000  # 1 hour in milliseconds
+
+# === Logging (optional) ===
+logging:
+  level:
+    root: INFO
+    org.havoc.skilltrack: DEBUG
+
+external:
+  github:
+    base-url: https://api.github.com
+    headers:
+      accept: application/vnd.github.v3+json
+      user-agent: SkillTrack-GitHub-Sync
+
+  leetcode:
+    base-url: https://leetcode.com/
+    headers:
+      accept: application/json
+      user-agent: SkillTrack-LeetCode-Sync
+
+scheduler:
+  sync:
+    cron: "0 0 0 * * *" # Every day at midnight
