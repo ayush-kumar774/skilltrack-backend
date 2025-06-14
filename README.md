@@ -81,7 +81,6 @@ Feel free to fork the repo and raise PRs with:
 - 🧼 Refactor improvements  
 
 **Developer:** [@Aayush](#)  
-**Mentor:** Madhav 🤖
 
 ---
 
