@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Getter
@@ -17,5 +18,6 @@ public class SkillLogResponse {
     private String source;
     private int count;
     private LocalDate date;
+    private ZonedDateTime createdAt;
     private List<String> tags;
 }

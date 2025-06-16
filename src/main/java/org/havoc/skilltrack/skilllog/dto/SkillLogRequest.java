@@ -26,4 +26,5 @@ public class SkillLogRequest {
     private LocalDate date; // activity date
 
     private List<String> tags; // ["Graph", "Arrays", "Spring"]
+
 }

@@ -6,9 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.havoc.skilltrack.enums.GitHubEventType;
 import org.havoc.skilltrack.external.github.dto.GitHubEventResponse;
 import org.havoc.skilltrack.external.leetcode.dto.LeetCodeSubmissionResponse;
+import org.havoc.skilltrack.skilllog.dto.SkillLogDashboardResponse;
+import org.havoc.skilltrack.skilllog.dto.SkillLogFilterRequest;
 import org.havoc.skilltrack.skilllog.dto.SkillLogRequest;
 import org.havoc.skilltrack.skilllog.dto.SkillLogResponse;
 import org.havoc.skilltrack.skilllog.entity.SkillLog;
+import org.havoc.skilltrack.skilllog.repository.SkillLogCustomRepository;
 import org.havoc.skilltrack.skilllog.repository.SkillLogRepository;
 import org.havoc.skilltrack.user.entity.User;
 import org.havoc.skilltrack.user.repository.UserRepository;
@@ -20,8 +23,12 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -159,4 +166,93 @@ public class SkillLogService {
         skillLogRepository.saveAll(logs);
         log.info("✅ Saved {} LeetCode activity logs for userId {}", logs.size(), userId);
     }
+
+    public SkillLogDashboardResponse getDashboardStats(SkillLogFilterRequest filterRequest) {
+        List<SkillLog> filteredLogs = skillLogRepository.findByFilters(filterRequest)
+                .orElseGet(List::of); // if Optional is empty, return empty list
+
+        List<SkillLogResponse> responses = filteredLogs.stream()
+                .map(this::mapToResponse)
+                .toList();
+
+        Map<String, Integer> typeCounts = filteredLogs.stream()
+                .collect(Collectors.groupingBy(
+                        SkillLog::getType,
+                        Collectors.reducing(0, e -> 1, Integer::sum)
+                ));
+
+        int totalLogs = filteredLogs.size();
+
+        ZonedDateTime start = ZonedDateTime
+                .now(ZoneId.of("Asia/Kolkata"))
+                .minusDays(6)
+                .toLocalDate()
+                .atStartOfDay(ZoneId.of("Asia/Kolkata"));
+
+        int count = (int) filteredLogs.stream()
+                .filter(log -> !log.getCreatedAt().isBefore(start))
+                .count();
+
+        return SkillLogDashboardResponse.builder()
+                .logs(responses)
+                .totalCountPerType(typeCounts)
+                .totalLogs(totalLogs)
+                .last7DaysCount(count)
+                .build();
+    }
+
+    private SkillLogResponse mapToResponse(SkillLog log) {
+        return SkillLogResponse.builder()
+                .id(String.valueOf(log.getId()))
+                .type(log.getType())
+                .source(log.getSource())
+                .tags(log.getTags())
+                .createdAt(log.getCreatedAt())
+                .build();
+    }
+
+
+//    public SkillLogDashboardResponse getDashboardStats(SkillLogFilterRequest filterRequest) {
+//        return skillLogRepository.findByFilters(filterRequest)
+//                .map(filteredLogs -> {
+//                    List<SkillLogResponse> responses = filteredLogs.stream()
+//                            .map(this::mapToResponse)
+//                            .toList();
+//
+//                    Map<String, Integer> typeCounts = filteredLogs.stream()
+//                            .collect(Collectors.groupingBy(
+//                                    SkillLog::getType,
+//                                    Collectors.reducing(0, e -> 1, Integer::sum)
+//                            ));
+//
+//                    int totalLogs = filteredLogs.size();
+//
+//                    ZonedDateTime last7DaysStart = ZonedDateTime
+//                            .now(ZoneId.of("Asia/Kolkata"))
+//                            .minusDays(6)
+//                            .toLocalDate()
+//                            .atStartOfDay(ZoneId.of("Asia/Kolkata"));
+//
+//                    int last7DaysCount = (int) filteredLogs.stream()
+//                            .filter(log -> !log.getCreatedAt().isBefore(last7DaysStart))
+//                            .count();
+//
+//                    return SkillLogDashboardResponse.builder()
+//                            .logs(responses)
+//                            .totalCountPerType(typeCounts)
+//                            .totalLogs(totalLogs)
+//                            .last7DaysCount(last7DaysCount)
+//                            .build();
+//                })
+//                .orElseGet(() -> {
+//                    log.warn("📭 No skill logs found for filter: {}", filterRequest);
+//                    return SkillLogDashboardResponse.builder()
+//                            .logs(List.of())
+//                            .totalCountPerType(Map.of())
+//                            .totalLogs(0)
+//                            .last7DaysCount(0)
+//                            .build();
+//                });
+//    }
+
 }
